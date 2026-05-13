@@ -40,7 +40,11 @@ describe('err', () => {
 
   it('attaches details when provided', () => {
     const r = err('boom', 'x', { stack: 'trace' });
-    expect(r.error.details).toEqual({ stack: 'trace' });
+    // `err()` always returns the failure branch, but its declared type is
+    // `Result<never>`, so TS needs an `r.ok === false` narrow before
+    // `r.error` is reachable.
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.details).toEqual({ stack: 'trace' });
   });
 });
 
