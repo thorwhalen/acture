@@ -76,6 +76,22 @@ jobs:
       - name: Test
         run: pnpm -r --filter "./packages/*" test
 
+      # Diagnostic: confirm which npm user the token identifies as, and
+      # what access it has to the `acture` package and `@acture` scope.
+      # Lets us tell apart a missing-secret problem from a wrong-perms
+      # problem. Safe to keep — only outputs metadata, no secrets.
+      - name: Diagnose npm token
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          echo "== whoami =="
+          npm whoami --registry=https://registry.npmjs.org/ || echo "(whoami failed)"
+          echo "== access to acture =="
+          npm access list packages 2>&1 | grep -E "acture" || echo "(no acture packages visible to this token)"
+          echo "== org membership =="
+          npm org ls acture 2>&1 || echo "(no @acture org access)"
+
       # changesets/action does one of:
       #   - opens/updates a "Version Packages" PR if changesets/*.md exist,
       #   - runs the `publish` script otherwise (which publishes to npm).
