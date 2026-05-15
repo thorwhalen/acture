@@ -16,6 +16,12 @@ for operations. This skill is the foundation for that path — it covers the
 If the project is an *existing* codebase being adopted incrementally, this is
 the wrong skill — load the `migration-*` track instead.
 
+Two agent-track skills sit *below* this foundation and go deeper on the steps
+that need it: **`acture-greenfield-state-model`** (the detail of Step 1) and
+**`acture-greenfield-bootstrap`** (the concrete, file-by-file walk-through of
+the whole sequence, grounded in the graph-editor worked example). Load them
+when you are actually building, not just orienting.
+
 ## The one rule you cannot break
 
 > The project must be able to get a working command-dispatch layer **without
@@ -35,7 +41,10 @@ application state, owned by the project. The agent does this directly — there
 is no acture package for "your state." If the project already has a state
 library (zustand, Redux Toolkit, …), that is the substrate; acture core's
 `StateAdapter<S>` interface (or a hand-written equivalent) is the seam the
-registry talks through. See the `acture-state-adapter` skill.
+registry talks through. **Load `acture-greenfield-state-model`** for the
+detail — the four hard constraints on the state shape, the deterministic
+id-generation pattern, the adapter seam — and `acture-state-adapter` for the
+interface itself.
 
 ### Step 2 — Decide: hand-write the registry, or install `acture` core
 
@@ -109,6 +118,8 @@ primitive stands alone.
 
 ## See also
 
+- `acture-greenfield-state-model` — Step 1 in detail: the state-shape constraints, id generation, the adapter seam.
+- `acture-greenfield-bootstrap` — the concrete file-by-file walk-through of this whole sequence, grounded in the graph-editor worked example.
 - [`docs/hand-written-registry.md`](../../docs/hand-written-registry.md) — the zero-dependency reference implementation.
 - [`docs/positioning.md`](../../docs/positioning.md) — canonical; the dev-tool-first principle and the two dimensions.
 - `acture-consumer-integration` — the per-consumer foundation for Step 4.

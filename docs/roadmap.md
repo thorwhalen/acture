@@ -4,17 +4,17 @@ The live forward-planning surface. `docs/v1_plan.md` and `docs/implementation_pl
 
 **How work proceeds:** phases are over. Work is small, tracked increments. Each picks one or two items from "Next" or "Deferred", ships them, updates this file, and replaces `docs/next_session.md` with the following handoff.
 
-Last updated: **2026-05-14** (v1.7 — macros + e2e testing tooling).
+Last updated: **2026-05-14** (v1.9 — codemods polish + greenfield agent-track skills).
 
 ---
 
 ## Status snapshot
 
-- **16 packages** in the workspace (15 published on npm 2026-05-14; **`acture-e2e-playwright`** new this increment, ships with the next release). Note: the MCP adapter ships as **`acture-mcp-server`** — the unscoped name `acture-mcp` was already taken by an unrelated project, so the package was renamed.
-- **419 package tests + 41 example tests** green; all packages and examples build + typecheck. (+23 from `acture-e2e-playwright`.)
+- **16 packages** in the workspace. 15 published on npm; **`acture-e2e-playwright`** ships with the next release. **`acture-codemods`** has a pending `minor` changeset (v1.9 CLI polish). Note: the MCP adapter ships as **`acture-mcp-server`** — the unscoped name `acture-mcp` was already taken by an unrelated project, so the package was renamed.
+- **422 package tests + 41 example tests** green; all packages and examples build + typecheck. (+3 from the v1.9 `acture-codemods` CLI disambiguation tests.)
 - Canonical positioning is now written down (`docs/positioning.md`) and wired into the skills.
-- **17 skills**: 12 `acture-*` (dev / foundation / consumer-surface — including `acture-greenfield` and the new `acture-macros` + `acture-e2e` consumer skills) and 5 `migration-*`.
-- Two reproducibility references: `docs/hand-written-registry.md` (the core primitive) and `docs/hand-written-command-sequence.md` (the record / compose / replay consumer layer).
+- **22 skills**: 17 `acture-*` (dev / foundation / consumer-surface — including `acture-greenfield` + its two new agent-track sub-skills `acture-greenfield-state-model` and `acture-greenfield-bootstrap`, the `acture-macros` + `acture-e2e` consumer skills, and the `acture-hotkeys` + `acture-mcp` + `acture-ai` consumer skills) and 5 `migration-*`.
+- Three reproducibility / recipe docs: `docs/hand-written-registry.md` (the core primitive), `docs/hand-written-command-sequence.md` (the record / compose / replay consumer layer), and `docs/ai-codemod-recipe.md` (authoring a one-off codemod).
 
 ---
 
@@ -52,11 +52,37 @@ The two least-tooled consumer surfaces — macros and e2e — built per the posi
 - **`acture-macros` + `acture-e2e` consumer skills** — both build on `acture-consumer-integration`. `acture-macros` documents the no-package, hand-write-from-the-doc path; `acture-e2e` covers the test-pyramid compilation strategy, the Playwright package, and that Cypress / Vitest browser mode / other runners are equally valid (agent-written) choices.
 - `acture-architecture-primer` and `acture-consumer-integration` updated: the eight-consumer-surface list and the per-tool table now reference the shipped macros/e2e artifacts instead of marking them "post-v1" / "planned".
 
+### v1.8 — hotkeys / MCP / AI consumer skills — complete (this increment)
+Three per-surface consumer skills, for the three remaining consumer surfaces that already have shipping packages. Full write-up: `docs/v1_8-reflection.md`.
+
+- **Step 1 decision (settled with the user via `AskUserQuestion`):** picked **per-surface consumer skills** over codemods polish / greenfield agent-track skills, scoped to **hotkeys + MCP + AI** — the three surfaces with shipping packages (`acture-hotkeys`, `acture-mcp-server`, `acture-ai-vercel`). telemetry / undo / extensions were deferred: no shipping packages (telemetry & undo are post-v1, rule-of-three gated), so their skills would be agent-written-path-only and less consistent — a later increment.
+- **`acture-hotkeys` skill** — keyboard shortcuts as a registry projection. The tool-library choice (tinykeys / react-hotkeys-hook / custom), agent-written vs the `acture-hotkeys` package, first-registered-wins conflict resolution, fire-time `when`-clause evaluation, the input-aware default, modal scoping.
+- **`acture-mcp` skill** — the registry as an MCP server. The two-layer split (pure projection vs transport glue), the SDK/transport choice, tier semantics, the deterministic `@deprecated` banner, function-`when` exclusion, errors-as-data, and the prompt-injection guardrails (hard-don'ts #5/#10).
+- **`acture-ai` skill** — the registry as LLM tool definitions. The SDK choice and the schema-projection fork (pass Zod through vs project to JSON Schema), errors-as-data, function-`when` exclusion, the prompt-injection guardrails, and the "an AI tool-call sequence is a macro" cross-reference.
+- All three build on `acture-consumer-integration`, follow the `acture-macros` / `acture-e2e` template for shape and tone, and document both the agent-written and package-reuse paths with the tool-library choice framed as the user's.
+- **Consistency updates:** `acture-architecture-primer`'s consumer-surface list and `acture-consumer-integration`'s "See also" now point at the new skills.
+- Skills + docs only — no package code changed, no changeset. Full workspace build / typecheck / test re-verified green.
+
+### v1.9 — codemods polish + greenfield agent-track skills — complete (this increment)
+Two backlog increments shipped in one session (the user delegated the scope call: "fix what's fixable autonomously"). Full write-up: `docs/v1_9-reflection.md`.
+
+**Part A — codemods README/CLI polish + AI-codemod-recipe doc** (closes the `docs/backlog/codemods-polish-and-tier-mirror.md` file):
+- **`acture-codemods` CLI** — the ambiguous "No files matched" error (v1.4 fresh-agent finding #4) is now three distinct messages: no `--target`/`--files-from` given, a path that does not exist (likely a typo), a path with no `.ts`/`.tsx`/`.jsx` files. `--help` gained Modes (`--list`/`--manifest`) and Exit codes sections. +3 CLI tests (52 → 55). `minor` changeset.
+- **`acture-codemods` README** — rewritten: documents every `--option` key for all five codemods, `--manifest` vs `--list`, `--files-from`, exit codes, and the from-a-clone invocation. (Finding #1 — the `npx` 404 — was resolved by reality: `acture-codemods` is published on npm; the README now states that and adds the contributor invocation.)
+- **`docs/ai-codemod-recipe.md`** — research-4 recommendation #8: the `Codemod` contract, the four-point conservative-codemod discipline, a ts-morph `run` skeleton, a prompt recipe, and how to run a one-off codemod (throwaway script vs. drop into the package).
+- **`.d.ts` tier mirror — deliberately NOT built.** Deferred v1.2 → v1.8 with zero concrete callers; tier filtering is runtime-only (`registry.list({ tiers })`), nothing consumes tier at the type level. Building it would be speculative infrastructure (rule of three). Instead, the `acture-build-tier` README caveat was rewritten to make the deferral explicit-with-rationale.
+- **`.changeset/README.md`** — fixed: it still described the dropped `fixed` group and the stale "0.x quirk". Now describes independent versioning and post-1.0 semver.
+
+**Part B — greenfield agent-track skills** (the per-step skills below the `acture-greenfield` foundation):
+- **`acture-greenfield-state-model`** — Step 1 in detail: the four hard constraints on the state shape (JSON-serializable, typed slices, normalized, stored-vs-derived), the deterministic counter-in-state id-generation pattern, the `StateAdapter` seam, what does NOT belong in state.
+- **`acture-greenfield-bootstrap`** — the concrete file-by-file walk-through of the foundation's four-step sequence, grounded in the `examples/greenfield/graph-editor` worked app: the three core files (`state.ts` → `registry.ts` → `commands/index.ts`), the "every mutation through dispatch" acceptance criterion + its `rg` audit, the ordering discipline, the recurring hand-write-vs-install decision points.
+- **Consistency update:** `acture-greenfield` now points at both sub-skills (intro + Step 1 + See also).
+
 ---
 
 ## Next
 
-**Pick the next increment from Deferred / backlog.** No item is pre-selected — the consumer-skill family is the natural continuation (hotkeys / MCP / AI / telemetry / undo / extensions still need per-surface consumer skills, now that the foundation + palette + macros + e2e skills exist), but the codemods README/CLI polish and the greenfield agent-track skills are equally valid picks. Choose one or two when this increment is scheduled.
+**Pick the next increment from Deferred / backlog.** No item is pre-selected. The codemods backlog file is now fully closed; the consumer-skill family covers every surface that has a shipping package; the greenfield agent-track now has its foundation + two sub-skills. The remaining backlog is thinner — the strongest candidates are the **telemetry / undo / extensions consumer skills** (still gated on those packages existing — agent-written-path-only until then) and **deeper greenfield agent-track skills** if a gap shows up in practice. It may be a good moment to consider whether a **post-v1 item** (the Python companion is unblocked and specified; `acture-undo` / `acture-telemetry` are spec'd) should be pulled forward — but only with explicit user direction and the rule of three. Surface the options when this increment is scheduled.
 
 ---
 
@@ -64,11 +90,9 @@ The two least-tooled consumer surfaces — macros and e2e — built per the posi
 
 Valid, not scheduled. Pick up when prioritized.
 
-- **Codemods README/CLI polish** — from the v1.4 fresh-agent test (`docs/fresh-agent-test-results.md`): the README's `npx acture-codemods` invocation story, undocumented per-codemod `--option` keys, undocumented `--manifest`/`--files-from`, and the ambiguous "No files matched" error. Full candidate list parked in `docs/backlog/codemods-polish-and-tier-mirror.md`.
-- **`.d.ts` mirror of resolved tier values** — optional `acture-build-tier` polish. Parked in the same backlog file.
-- **AI-codemod-recipe doc** — research-4 recommendation #8: a doc showing how to prompt an agent to author a one-off codemod. Parked in the same backlog file.
-- **Per-surface consumer skills** — `acture-consumer-integration` is the foundation; per-surface skills now exist for the palette (`acture-palette-design`), macros (`acture-macros`), and e2e (`acture-e2e`). Hotkeys, MCP, AI, telemetry, undo, extensions still need consumer skills — the natural next increment.
-- **Greenfield agent-track skills** — the *foundation* now exists (`acture-greenfield` + `docs/hand-written-registry.md`, added v1.6). What's still missing: per-step greenfield skills below the foundation (state-model design walkthrough, a worked greenfield bootstrap). Lower priority now that the foundation is in place; build out as the consumer-skill family fills in.
+- **`.d.ts` mirror of resolved tier values** — ⏸️ **deliberately deferred, not just unscheduled.** Considered in v1.9 and explicitly not built: zero concrete callers, tier filtering is runtime-only, nothing consumes tier at the type level. Rule-of-three gated — waits for a concrete type-level tier consumer. The `acture-build-tier` README documents the deferral and its rationale.
+- **Per-surface consumer skills** — `acture-consumer-integration` is the foundation; per-surface skills now exist for the palette (`acture-palette-design`), macros (`acture-macros`), e2e (`acture-e2e`), hotkeys (`acture-hotkeys`), MCP (`acture-mcp`), and AI tool calling (`acture-ai`). Still missing: **telemetry, undo, extensions** — but these have no shipping packages (telemetry & undo are post-v1, rule-of-three gated), so their skills would be agent-written-path-only. Lower priority; revisit if/when those packages exist.
+- **Deeper greenfield agent-track skills** — the foundation (`acture-greenfield`) plus the two agent-track sub-skills (`acture-greenfield-state-model`, `acture-greenfield-bootstrap`, added v1.9) now cover the greenfield sequence end-to-end. No specific gap is scheduled; add further sub-skills only if practice surfaces one.
 
 ---
 
@@ -109,11 +133,13 @@ Explicit done/not-done for everything raised in conversation, so nothing is lost
 | e2e testing tooling (`acture-e2e-playwright`) | ✅ Done (v1.7) — package shipped; `acture-e2e` consumer skill; see `docs/v1_7-reflection.md` |
 | Shared command-sequence substrate question | ✅ Resolved (v1.7) — settled with user: hand-written reference doc + one tool-bound package, no `acture-sequence` |
 | Changeset spurious `2.0.0` major bump | ✅ Resolved (v1.7) — peer-dep ranges loosened to `^1.0.0` + `onlyUpdatePeerDependentsWhenOutOfRange` + `fixed` group dropped; see `docs/escalations.md` |
-| Codemods README/CLI polish | ⏸️ Deferred — backlog |
-| `.d.ts` tier mirror | ⏸️ Deferred — backlog |
-| AI-codemod-recipe doc | ⏸️ Deferred — backlog |
-| Per-surface consumer skills (hotkeys/mcp/ai/telemetry/undo/extensions) | ⏸️ Deferred — backlog |
-| Greenfield agent-track skills | ⏸️ Deferred — backlog |
+| Codemods README/CLI polish | ✅ Done (v1.9) — CLI error disambiguation + full README rewrite; `minor` changeset on `acture-codemods`; see `docs/v1_9-reflection.md` |
+| AI-codemod-recipe doc | ✅ Done (v1.9) — `docs/ai-codemod-recipe.md` |
+| `.d.ts` tier mirror | ⏸️ Deferred (v1.9 decision) — explicitly not built: zero type-level tier consumers, rule-of-three gated; rationale in the `acture-build-tier` README |
+| `.changeset/README.md` stale (`fixed` group, 0.x quirk) | ✅ Fixed (v1.9) — now describes independent versioning + post-1.0 semver |
+| Per-surface consumer skills — hotkeys / MCP / AI | ✅ Done (v1.8) — `acture-hotkeys`, `acture-mcp`, `acture-ai`; see `docs/v1_8-reflection.md` |
+| Per-surface consumer skills — telemetry / undo / extensions | ⏸️ Deferred — no shipping packages yet (post-v1); skills would be agent-written-path-only |
+| Greenfield agent-track skills | ✅ Done (v1.9) — `acture-greenfield-state-model` + `acture-greenfield-bootstrap` below the foundation; see `docs/v1_9-reflection.md` |
 | `acture-test-property`, `state-jotai`, `state-valtio` | 🔒 Post-v1 |
 | `acture-undo`, `acture-telemetry`, `acture-sandbox` | 🔒 Post-v1 |
 | Research-6 (cross-language story) | ✅ Done — filed at `docs/research/acture_research_6 …` |

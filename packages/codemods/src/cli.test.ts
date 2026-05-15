@@ -95,11 +95,32 @@ describe('CLI', () => {
     cleanup();
   });
 
-  it('returns 2 when no files matched', async () => {
+  it('returns 2 when no --target / --files-from given', async () => {
     const { io, err } = captureIo();
     const code = await runCli(['wrap-handler-with-mutation'], io);
     expect(code).toBe(2);
-    expect(err.join('\n')).toContain('No files matched');
+    expect(err.join('\n')).toContain('No --target or --files-from given');
+  });
+
+  it('returns 2 with a "does not exist" message for a nonexistent --target', async () => {
+    const { io, err } = captureIo();
+    const code = await runCli(
+      ['wrap-handler-with-mutation', '--target', '/no/such/path/here'],
+      io,
+    );
+    expect(code).toBe(2);
+    expect(err.join('\n')).toContain('does not exist');
+    expect(err.join('\n')).toContain('/no/such/path/here');
+  });
+
+  it('returns 2 with a "no files found" message for a dir with no TS/TSX files', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'acture-codemods-empty-'));
+    writeFileSync(join(dir, 'notes.md'), '# not a source file\n');
+    const { io, err } = captureIo();
+    const code = await runCli(['wrap-handler-with-mutation', '--target', dir], io);
+    expect(code).toBe(2);
+    expect(err.join('\n')).toContain('No .ts / .tsx / .jsx files found');
+    rmSync(dir, { recursive: true, force: true });
   });
 
   it('returns 2 on missing codemod name', async () => {

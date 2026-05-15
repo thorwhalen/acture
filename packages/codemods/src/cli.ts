@@ -20,7 +20,7 @@
  * pre-expand and pass via `--files-from`.
  */
 
-import { readdirSync, statSync, readFileSync } from 'node:fs';
+import { readdirSync, statSync, readFileSync, existsSync } from 'node:fs';
 import { join, resolve, isAbsolute } from 'node:path';
 import { runCodemod } from './runner.js';
 import { MANIFEST, listShipped } from './manifest.js';
@@ -126,28 +126,67 @@ function parseArgs(argv: readonly string[]): ParsedArgs | ParsedError {
     }
   }
 
-  const files = collectFiles(targets, filesFrom);
-  if (files.length === 0) {
-    return { kind: 'error', message: 'No files matched. Use --target <path> or --files-from <list>.' };
+  const collected = collectFiles(targets, filesFrom);
+  if (collected.kind === 'error') {
+    return { kind: 'error', message: collected.message };
   }
-  return { kind: 'ok', name, files, dryRun, json, options };
+  return { kind: 'ok', name, files: collected.files, dryRun, json, options };
 }
 
-function collectFiles(targets: readonly string[], filesFrom: readonly string[]): string[] {
+type CollectResult =
+  | { readonly kind: 'ok'; readonly files: string[] }
+  | { readonly kind: 'error'; readonly message: string };
+
+/**
+ * Expand `--target` / `--files-from` into a sorted file list. The three
+ * "nothing to do" outcomes are kept distinct so the user knows which one
+ * they hit (the v1.4 fresh-agent test flagged the old single message as
+ * ambiguous):
+ *   1. no `--target` / `--files-from` given at all,
+ *   2. a `--target` / `--files-from` path that does not exist (likely a typo),
+ *   3. paths that exist but contain no `.ts` / `.tsx` / `.jsx` files.
+ */
+function collectFiles(targets: readonly string[], filesFrom: readonly string[]): CollectResult {
+  if (targets.length === 0 && filesFrom.length === 0) {
+    return {
+      kind: 'error',
+      message: 'No --target or --files-from given. Use --target <path> or --files-from <list>.',
+    };
+  }
   const out = new Set<string>();
+  const missing: string[] = [];
   for (const t of targets) {
     const abs = isAbsolute(t) ? t : resolve(process.cwd(), t);
+    if (!existsSync(abs)) {
+      missing.push(t);
+      continue;
+    }
     walk(abs, out);
   }
   for (const list of filesFrom) {
     const abs = isAbsolute(list) ? list : resolve(process.cwd(), list);
+    if (!existsSync(abs)) {
+      missing.push(list);
+      continue;
+    }
     const lines = readFileSync(abs, 'utf-8').split('\n').map((l) => l.trim()).filter(Boolean);
     for (const line of lines) {
       const p = isAbsolute(line) ? line : resolve(process.cwd(), line);
       out.add(p);
     }
   }
-  return [...out].sort();
+  if (missing.length > 0) {
+    const noun = missing.length > 1 ? 'paths do' : 'path does';
+    return { kind: 'error', message: `Target ${noun} not exist: ${missing.join(', ')}` };
+  }
+  if (out.size === 0) {
+    const where = [...targets, ...filesFrom].join(', ');
+    return {
+      kind: 'error',
+      message: `No .ts / .tsx / .jsx files found under: ${where}`,
+    };
+  }
+  return { kind: 'ok', files: [...out].sort() };
 }
 
 function walk(path: string, out: Set<string>): void {
@@ -201,10 +240,20 @@ Usage:
 Arguments:
   <name>                Codemod name (from --list).
   --target <path>       A file or a directory to walk. May be repeated.
-  --files-from <file>   Read a newline-delimited list of files.
+  --files-from <file>   Read a newline-delimited list of files. May be repeated.
   --dry-run             Compute changes without writing files.
   --json                Output a machine-readable JSON result.
   --option key=value    Pass a per-codemod option. May be repeated.
+                        Per-codemod keys are listed in the README.
+
+Modes (use instead of <name>):
+  --list                Print the shipped codemod catalog (human-readable).
+  --manifest            Print the catalog as JSON, for tooling.
+  --help, -h            Print this help.
+
+Exit codes:
+  0  success (including --list / --manifest / --help)
+  2  usage error, unknown codemod, or no files matched
 
 Examples:
   acture-codemods wrap-handler-with-mutation --target src/ --dry-run --json

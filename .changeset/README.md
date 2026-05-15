@@ -4,7 +4,7 @@ Hello and welcome! This folder is managed by `@changesets/cli`. Full docs: https
 
 ## Workflow for this repo
 
-The ten publishable packages — `acture`, `acture-state-zustand`, `acture-state-redux`, `acture-palette-react`, `acture-hotkeys`, `acture-forms-autoform`, `acture-forms-rjsf`, `acture-mcp-server`, `acture-ai-vercel`, `acture-migration` — share a **fixed** version (see `config.json`). When any of them changes, all ten get a matching bump.
+Every publishable `acture-*` package versions **independently** — there is no `fixed` or `linked` group (`config.json` has `fixed: []`, `linked: []`). A change to one package bumps only that package; `updateInternalDependencies: "patch"` handles the genuine core↔adapter coupling, and `onlyUpdatePeerDependentsWhenOutOfRange: true` keeps a peer-dep bump from force-majoring every dependent. (This replaced an earlier `fixed`-group setup that caused a spurious suite-wide major cascade — full write-up in `docs/escalations.md`.)
 
 Add a changeset to any non-trivial PR:
 
@@ -16,11 +16,12 @@ Pick the packages affected, choose `patch` / `minor` / `major`, and write a one-
 
 On merge to `main`, the release workflow opens (or updates) a "Version Packages" PR that consumes pending changesets and bumps versions. Merging that PR triggers the npm + PyPI publish.
 
-## The 0.x quirk — use `patch` until v1.0.0
+## Choosing the bump level
 
-During the `0.x` line, **always use `patch`** as the changeset type. A `minor` changeset on a `0.x` version overshoots straight to `1.0.0` (changesets default behavior: in pre-1.0 land it treats `minor`-marked changes as the breaking-out-of-prerelease moment).
+The suite is past `v1.0.0`, so standard semver applies — no pre-1.0 quirks:
 
-Since `v1.0.0` is reserved for the post-Phase-4 milestone, `patch` is the only safe level until we deliberately cut v1.0. The mechanical rule until then:
+- `patch` — bug fixes, internal changes, doc-only changes that ship in a package's published files.
+- `minor` — new or changed package surface, backward-compatible. The default for a new feature or a new package.
+- `major` — a breaking change to a package's public API. Per research-5, note that promoting an `@experimental` surface to `@stable`, or refining a tool *description*, can also be breaking for schema-tracking consumers.
 
-- Non-breaking and breaking changes alike: `patch` (e.g. `0.2.0 → 0.2.1 → 0.2.2 …`).
-- When ready to ship v1: bump manually in a release PR (or use `major`).
+Skills and repo docs that do not ship inside a package need no changeset.
