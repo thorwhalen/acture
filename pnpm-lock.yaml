@@ -711,6 +711,51 @@ importers:
         specifier: ^5.0.0
         version: 5.0.13(@types/react@19.2.14)(immer@11.1.8)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))
 
+  packages/telemetry:
+    devDependencies:
+      acture:
+        specifier: workspace:*
+        version: link:../core
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(postcss@8.5.14)(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)(jsdom@25.0.1)
+      zod:
+        specifier: ^4.0.0
+        version: 4.4.3
+
+  packages/undo:
+    devDependencies:
+      acture:
+        specifier: workspace:*
+        version: link:../core
+      acture-state-zustand:
+        specifier: workspace:*
+        version: link:../state-zustand
+      immer:
+        specifier: ^11.0.0
+        version: 11.1.8
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(postcss@8.5.14)(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)(jsdom@25.0.1)
+      zod:
+        specifier: ^4.0.0
+        version: 4.4.3
+      zustand:
+        specifier: ^5.0.0
+        version: 5.0.13(@types/react@19.2.14)(immer@11.1.8)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))
+
 packages:
 
   '@ai-sdk/anthropic@1.2.12':

@@ -1,0 +1,62 @@
+{
+  "name": "acture-undo",
+  "version": "1.0.0",
+  "description": "acture undo adapter — patch-based undo/redo over a PatchCapableAdapter. Transactions group dispatches into one undo unit. Host-callback effect hook signals undo/redo lifecycle.",
+  "license": "Apache-2.0",
+  "author": "Thor Whalen",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thorwhalen/acture.git",
+    "directory": "packages/undo"
+  },
+  "homepage": "https://github.com/thorwhalen/acture#readme",
+  "bugs": "https://github.com/thorwhalen/acture/issues",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "peerDependencies": {
+    "acture": "^1.0.0"
+  },
+  "devDependencies": {
+    "acture": "workspace:*",
+    "acture-state-zustand": "workspace:*",
+    "immer": "^11.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "zod": "^4.0.0",
+    "zustand": "^5.0.0"
+  },
+  "keywords": [
+    "acture",
+    "undo",
+    "redo",
+    "patches",
+    "immer",
+    "command-dispatch"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -4,17 +4,17 @@ The live forward-planning surface. `docs/v1_plan.md` and `docs/implementation_pl
 
 **How work proceeds:** phases are over. Work is small, tracked increments. Each picks one or two items from "Next" or "Deferred", ships them, updates this file, and replaces `docs/next_session.md` with the following handoff.
 
-Last updated: **2026-05-15** (v1.10 — `.describe()` schema-quality lint rule + MCP spec-version pin).
+Last updated: **2026-05-15** (v1.11 — `acture-telemetry` + `acture-undo` pull-forward from Post-v1).
 
 ---
 
 ## Status snapshot
 
-- **16 packages** in the workspace. `acture-codemods@1.2.0` published (v1.9 CLI polish, 2026-05-15); `acture-e2e-playwright` still ships with the next release. Two pending changesets this increment: `eslint-plugin-acture-migration` `minor` and `acture-mcp-server` `patch`. Note: the MCP adapter ships as **`acture-mcp-server`** — the unscoped name `acture-mcp` was already taken by an unrelated project, so the package was renamed.
-- **441 package tests + 41 example tests** green; all packages and examples build + typecheck. (+19 from the new `acture/require-param-describe` rule's tests, +2 from the MCP spec-version pin tests.)
-- Canonical positioning is now written down (`docs/positioning.md`) and wired into the skills.
-- **22 skills**: 17 `acture-*` (dev / foundation / consumer-surface — including `acture-greenfield` + its two new agent-track sub-skills `acture-greenfield-state-model` and `acture-greenfield-bootstrap`, the `acture-macros` + `acture-e2e` consumer skills, and the `acture-hotkeys` + `acture-mcp` + `acture-ai` consumer skills) and 5 `migration-*`.
-- Three reproducibility / recipe docs: `docs/hand-written-registry.md` (the core primitive), `docs/hand-written-command-sequence.md` (the record / compose / replay consumer layer), and `docs/ai-codemod-recipe.md` (authoring a one-off codemod).
+- **18 packages** in the workspace. **`acture-telemetry`** and **`acture-undo`** are new this increment (v1.11), pulled forward from Post-v1. Pending changesets: `acture-telemetry` and `acture-undo` (both `minor` at debut). `acture-e2e-playwright` still ships with the next release. Note: the MCP adapter ships as **`acture-mcp-server`** — the unscoped name `acture-mcp` was already taken by an unrelated project, so the package was renamed.
+- **460 package tests + 41 example tests** green (+18 from `acture-telemetry`, +19 from `acture-undo`); all packages and examples build + typecheck.
+- Canonical positioning is now written down (`docs/positioning.md`) and wired into the skills. **Rule-of-three rescoped** (`docs/redesign_takeaways.md` §6): the soft heuristic applies to acture *users* deciding when to formalize a command, not to acture *maintainers* deciding what to ship.
+- **24 skills**: 19 `acture-*` (dev / foundation / consumer-surface — palette / hotkeys / MCP / AI / macros / e2e / **telemetry** / **undo** consumer skills + `acture-greenfield` and its two sub-skills) and 5 `migration-*`.
+- Five reproducibility / recipe docs: `hand-written-registry.md`, `hand-written-command-sequence.md`, **`hand-written-telemetry.md`**, **`hand-written-undo.md`**, and `ai-codemod-recipe.md`.
 
 ---
 
@@ -84,11 +84,20 @@ Two small, autonomous backlog items surfaced by research-6 (the user picked "sma
 - **`acture/require-param-describe`** (new ESLint rule in `eslint-plugin-acture-migration`) — flags top-level fields in a `defineCommand({ params: z.object({...}) })` schema whose value expression has no `.describe(...)` in its method chain. Zod → JSON Schema is lossy; without `.describe()` every downstream consumer (MCP tool inputs, AI function-calling tool args, autoform / rjsf form adapters) is left with a parameter that has no semantic hint. Conservative detection (tracks the `defineCommand` and `z` bindings, only fires when both are recognised and `params` is structurally `z.object({...})`). +19 tests. `minor` changeset. The plugin now hosts both migration-specific and schema-quality rules; the historical `-migration` package suffix was kept to avoid a breaking rename (a god-package-of-one new plugin would have been speculative infrastructure — hard-don't #2).
 - **MCP spec-version pin** (`packages/mcp/src/spec-version.test.ts`) — pins `EXPECTED_PROTOCOL_VERSION = '2025-11-25'` and asserts the SDK's `LATEST_PROTOCOL_VERSION` matches and `SUPPORTED_PROTOCOL_VERSIONS` still contains the older dates we interoperate with. When the SDK ships a new spec date the test fails, surfacing the upgrade as the deliberate, semver-major decision the roadmap calls for rather than an accidental transitive-dep pickup. README documents the policy + the test's upgrade checklist. +2 tests. `patch` changeset on `acture-mcp-server`.
 
+### v1.11 — `acture-telemetry` + `acture-undo` pull-forward — complete (this increment)
+Two new packages pulled forward from Post-v1 by explicit user direction. Full write-up: `docs/v1_11-reflection.md`.
+
+- **`acture-telemetry`** (new package, `1.0.0`) — observe every dispatch via a configurable sink. Optional pass-through `redact` and `sampler` callbacks (single-function shapes, no mini-DSL). One built-in `consoleSink` for reference; multi-destination is user-side composition (`sink: (r) => { a(r); b(r); }`). Errors-as-data preserved end-to-end. Telemetry never breaks dispatch (sampler/redact/sink each in defensive `try`/`catch`). +18 tests. `minor` changeset. Reference: `docs/hand-written-telemetry.md`. Consumer skill: `acture-telemetry`.
+- **`acture-undo`** (new package, `1.0.0`) — patch-based undo/redo over a `PatchCapableAdapter`. `createUndoHistory(adapter, registry, options?)` returns `{ undo, redo, canUndo, canRedo, clear, transaction, entries, dispose }`. Observes the adapter's `setStateWithPatches` calls and groups them by dispatch boundary; `transaction(fn)` groups N dispatches. Partial-failure semantics: mid-transaction failure leaves prior mutations applied; the entry is still pushed; caller can `undo()` to rewind. Effects flow through optional `onEffect(effect, { isUndo, isRedo })` host callback at apply/undo/redo lifecycle points — acture-undo never enacts effects itself. +19 tests. `minor` changeset. Reference: `docs/hand-written-undo.md`. Consumer skill: `acture-undo`.
+- **Step 1 shape decisions (settled with the user via `AskUserQuestion`):** telemetry `redact` = pass-through callback (not declarative key-list); telemetry `sampler` = function (not fraction); undo effects = host callback `onEffect(effect, { isUndo, isRedo })` (not typed enum); transaction failure = partial stays applied (not auto-rewind). All four landed on the simpler, more flexible options.
+- **Composition:** both packages wrap `registry.dispatch` via the same monkey-patch pattern as `acture-devtools`'s `instrumentRegistry` and `enableTierWarnings`. Install order = install order; dispose in reverse install order. No core change was needed.
+- **Consistency updates:** `acture-architecture-primer`'s consumer-surface list (#5 telemetry, #6 undo/redo) now references the shipped artifacts; `acture-consumer-integration`'s per-tool table gained telemetry and undo rows and its "See also" enumerates the new skills; `acture-state-adapter` no longer marks undo as "post-v1".
+
 ---
 
 ## Next
 
-**v1.11 — settled with the user on 2026-05-15:** pull two post-v1 items forward — **`acture-telemetry`** first (smaller; reuses `acture-devtools`'s `instrumentRegistry` hook), then **`acture-undo`** (larger; consumes `PatchCapableAdapter`, both state adapters already implement it). Full scope and the per-item shape decisions to surface with the user before locking in are in `docs/next_session.md`. Each item ships as a new package with a `docs/hand-written-*.md` reference doc and a consumer skill (the dev-tool-first promise is non-negotiable).
+**Pick the next increment from Deferred / backlog or the remaining Post-v1 list.** No item is pre-selected. With telemetry and undo shipped, the remaining Post-v1 items are: the **Python companion** (research-6 spec'd, unblocked), **`acture-sandbox`** (membrane-pattern third-party extension sandboxing), **`acture-test-property`** (fast-check arbitraries over command sequences), and additional state adapters (`acture-state-jotai`, `acture-state-valtio`). The deferred-but-not-rejected backlog has only the `.d.ts` tier mirror and the per-surface skills for extensions (no package yet). Pull-forward decisions are the user's; surface options when this increment is scheduled.
 
 ---
 
@@ -106,8 +115,8 @@ Valid, not scheduled. Pick up when prioritized.
 
 Per `docs/v1_plan.md` §"Post-v1" — none ship without explicit user direction. (Earlier drafts of this section gated post-v1 promotion on a "three concrete callers" rule of three; that was a misapplication — see `docs/redesign_takeaways.md` §6. Post-v1 items pull forward on user direction plus the standard maintainer principles: hard-don't #2, dev-tool-first, single accelerators.)
 
-- **`acture-undo`** — patch-based undo, transactions, effect queue. `Result<R>` already reserves `patches?` / `effects?`; `PatchCapableAdapter` is implemented by the state adapters.
-- **`acture-telemetry`** — middleware logging every dispatch.
+- ~~**`acture-undo`** — patch-based undo, transactions, effect queue.~~ ✅ Shipped v1.11.
+- ~~**`acture-telemetry`** — middleware logging every dispatch.~~ ✅ Shipped v1.11.
 - **`acture-sandbox`** — membrane-pattern third-party extension sandboxing.
 - **`acture-test-property`** — fast-check arbitraries derived from command param schemas; random command sequences asserting state invariants. (Now that v1.7 has landed: this would build *on* `acture-e2e-playwright`'s sequence engine — random `CommandSequence`s replayed via `replaySequence`, with invariant assertions — rather than re-deriving the sequence layer. Still deferred — pull forward on user direction.)
 - **`acture-state-jotai`, `acture-state-valtio`** — additional reference `StateAdapter<S>` implementations.
@@ -146,11 +155,13 @@ Explicit done/not-done for everything raised in conversation, so nothing is lost
 | `.d.ts` tier mirror | ⏸️ Deferred (v1.9 decision) — explicitly not built: no type-level tier consumer; rationale in the `acture-build-tier` README |
 | `.changeset/README.md` stale (`fixed` group, 0.x quirk) | ✅ Fixed (v1.9) — now describes independent versioning + post-1.0 semver |
 | Per-surface consumer skills — hotkeys / MCP / AI | ✅ Done (v1.8) — `acture-hotkeys`, `acture-mcp`, `acture-ai`; see `docs/v1_8-reflection.md` |
-| Per-surface consumer skills — telemetry / undo / extensions | ⏸️ Deferred — no shipping packages yet (post-v1); skills would be agent-written-path-only |
+| Per-surface consumer skills — telemetry / undo | ✅ Done (v1.11) — shipped alongside the packages; see `docs/v1_11-reflection.md` |
+| Per-surface consumer skills — extensions | ⏸️ Deferred — no `acture-extensions` / sandbox package yet |
 | Greenfield agent-track skills | ✅ Done (v1.9) — `acture-greenfield-state-model` + `acture-greenfield-bootstrap` below the foundation; see `docs/v1_9-reflection.md` |
 | `.describe()` schema-lint rule | ✅ Done (v1.10) — `acture/require-param-describe` in `eslint-plugin-acture-migration`; `minor` changeset; see `docs/v1_10-reflection.md` |
 | Pin MCP spec version | ✅ Done (v1.10) — `packages/mcp/src/spec-version.test.ts` pins `2025-11-25`; `patch` changeset on `acture-mcp-server`; see `docs/v1_10-reflection.md` |
 | `acture-test-property`, `state-jotai`, `state-valtio` | 🔒 Post-v1 |
-| `acture-undo`, `acture-telemetry`, `acture-sandbox` | 🔒 Post-v1 |
+| `acture-undo`, `acture-telemetry` | ✅ Shipped v1.11 — see `docs/v1_11-reflection.md` |
+| `acture-sandbox` | 🔒 Post-v1 |
 | Research-6 (cross-language story) | ✅ Done — filed at `docs/research/acture_research_6 …` |
 | Python companion | 🔓 Post-v1 but **unblocked & specified** — thin MCP-client facade; server side (`acture-mcp-server`) already ships |

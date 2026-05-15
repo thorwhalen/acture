@@ -1,6 +1,6 @@
 ---
 name: acture-state-adapter
-description: Load context on acture's StateAdapter<S> interface (per research-3), the PatchCapableAdapter sub-interface for the future undo subsystem, and the strategy of being state-library-agnostic with documented happy-path adapters. Two reference adapters now ship: `acture-state-zustand` and `acture-state-redux`. Use when building or modifying a state adapter, when designing the StateAdapter interface, when working on the reference adapters, when integrating acture with a host app's existing store, or when reviewing the get/set/subscribe contract. Triggers on "StateAdapter", "state library", "zustand", "Redux Toolkit", "RTK", "Jotai", "Valtio", "MobX", "Effector", "XState", "state substrate", "patches", "Immer", "produceWithPatches". Do NOT use for the undo subsystem itself (post-v1).
+description: Load context on acture's StateAdapter<S> interface (per research-3), the PatchCapableAdapter sub-interface that `acture-undo` consumes, and the strategy of being state-library-agnostic with documented happy-path adapters. Two reference adapters ship: `acture-state-zustand` and `acture-state-redux`. Use when building or modifying a state adapter, when designing the StateAdapter interface, when working on the reference adapters, when integrating acture with a host app's existing store, or when reviewing the get/set/subscribe contract. Triggers on "StateAdapter", "state library", "zustand", "Redux Toolkit", "RTK", "Jotai", "Valtio", "MobX", "Effector", "XState", "state substrate", "patches", "Immer", "produceWithPatches". For the undo subsystem itself, load `acture-undo`.
 ---
 
 # acture state adapter
@@ -45,7 +45,7 @@ export function isPatchCapable<S>(a: StateAdapter<S>): a is PatchCapableAdapter<
 
 Per research-3 §2, the four constraints acture has on its substrate:
 
-1. **Patches for undo** (post-v1) — must allow `produceWithPatches`-shaped output OR allow acture to wrap the substrate's setter.
+1. **Patches for undo** (`acture-undo`, v1.11+) — must allow `produceWithPatches`-shaped output OR allow acture to wrap the substrate's setter.
 2. **`commandsChanged` observables** — subscribe must be callable outside React, of shape `(listener) => unsubscribe`, no Provider required.
 3. **Typed slices** — slice types must be first-class TS types, not runtime-only things.
 4. **JSON-serializable snapshots** — `JSON.stringify(getState())` must round-trip.
