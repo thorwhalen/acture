@@ -49,6 +49,7 @@ Almost every consumer rests on *some* third-party library:
 | MCP server          | `@modelcontextprotocol/sdk`                     | `acture-mcp-server` |
 | Parameter forms     | react-hook-form + Zod, rjsf, custom             | `acture-forms-autoform`, `acture-forms-rjsf` |
 | e2e testing         | Playwright, Cypress, Vitest browser, custom     | `acture-e2e-playwright` (Playwright) |
+| Property testing    | fast-check, jsverify, hand-rolled               | `acture-test-property` (fast-check) |
 | Macros (record/replay) | none — registry only                         | *none — pattern + `acture-macros` skill* |
 | Telemetry           | structured logger, OpenTelemetry, network beacon, custom | `acture-telemetry` (one reference `consoleSink`; user's sink is the user's) |
 | Undo / redo         | any `PatchCapableAdapter` (zustand+immer, RTK, MST) | `acture-undo` |
@@ -88,4 +89,4 @@ The same positioning applies inward:
 - `docs/positioning.md` — the canonical positioning this skill enforces.
 - `acture-architecture-primer` — the eight consumer surfaces and the three primitives.
 - `acture-hard-donts` — the merge checklist; #2 (no god-package) and #3 (adapters translate) are the ones this skill operationalises.
-- Per-surface skills — `acture-palette-design`, `acture-hotkeys`, `acture-mcp`, `acture-ai`, `acture-macros`, `acture-e2e`, `acture-telemetry`, `acture-undo` — for the specifics of each surface.
+- Per-surface skills — `acture-palette-design`, `acture-hotkeys`, `acture-mcp`, `acture-ai`, `acture-macros`, `acture-e2e`, `acture-test-property`, `acture-telemetry`, `acture-undo` — for the specifics of each surface.

@@ -729,6 +729,36 @@ importers:
         specifier: ^4.0.0
         version: 4.4.3
 
+  packages/test-property:
+    devDependencies:
+      acture:
+        specifier: workspace:*
+        version: link:../core
+      acture-e2e-playwright:
+        specifier: workspace:*
+        version: link:../e2e-playwright
+      acture-state-redux:
+        specifier: workspace:*
+        version: link:../state-redux
+      acture-state-zustand:
+        specifier: workspace:*
+        version: link:../state-zustand
+      fast-check:
+        specifier: ^4.8.0
+        version: 4.8.0
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(postcss@8.5.14)(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.19)(jsdom@25.0.1)
+      zod:
+        specifier: ^4.0.0
+        version: 4.4.3
+
   packages/undo:
     devDependencies:
       acture:

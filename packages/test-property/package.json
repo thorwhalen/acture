@@ -1,0 +1,65 @@
+{
+  "name": "acture-test-property",
+  "version": "1.0.0",
+  "description": "acture property-testing adapter — fast-check arbitraries over the command registry; random CommandSequences replayed via acture-e2e-playwright's sequence engine; invariants asserted end-of-sequence.",
+  "license": "Apache-2.0",
+  "author": "Thor Whalen",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thorwhalen/acture.git",
+    "directory": "packages/test-property"
+  },
+  "homepage": "https://github.com/thorwhalen/acture#readme",
+  "bugs": "https://github.com/thorwhalen/acture/issues",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "peerDependencies": {
+    "acture": "^1.0.0",
+    "fast-check": "^3.0.0 || ^4.0.0"
+  },
+  "devDependencies": {
+    "acture": "workspace:*",
+    "acture-e2e-playwright": "workspace:*",
+    "acture-state-redux": "workspace:*",
+    "acture-state-zustand": "workspace:*",
+    "fast-check": "^4.8.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "zod": "^4.0.0"
+  },
+  "keywords": [
+    "acture",
+    "property-testing",
+    "fast-check",
+    "fuzzing",
+    "invariants",
+    "command-dispatch",
+    "testing"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -4,17 +4,17 @@ The live forward-planning surface. `docs/v1_plan.md` and `docs/implementation_pl
 
 **How work proceeds:** phases are over. Work is small, tracked increments. Each picks one or two items from "Next" or "Deferred", ships them, updates this file, and replaces `docs/next_session.md` with the following handoff.
 
-Last updated: **2026-05-15** (v1.11 — `acture-telemetry` + `acture-undo` pull-forward from Post-v1).
+Last updated: **2026-05-15** (v1.12 — `acture-test-property` pull-forward from Post-v1).
 
 ---
 
 ## Status snapshot
 
-- **18 packages** in the workspace. **`acture-telemetry`** and **`acture-undo`** are new this increment (v1.11), pulled forward from Post-v1. Pending changesets: `acture-telemetry` and `acture-undo` (both `minor` at debut). `acture-e2e-playwright` still ships with the next release. Note: the MCP adapter ships as **`acture-mcp-server`** — the unscoped name `acture-mcp` was already taken by an unrelated project, so the package was renamed.
-- **460 package tests + 41 example tests** green (+18 from `acture-telemetry`, +19 from `acture-undo`); all packages and examples build + typecheck.
+- **19 packages** in the workspace. **`acture-test-property`** is new this increment (v1.12), pulled forward from Post-v1. Pending changeset: `acture-test-property` (`minor` at debut).
+- **489 package tests + 41 example tests** green (+29 from `acture-test-property`); all packages and examples build + typecheck.
 - Canonical positioning is now written down (`docs/positioning.md`) and wired into the skills. **Rule-of-three rescoped** (`docs/redesign_takeaways.md` §6): the soft heuristic applies to acture *users* deciding when to formalize a command, not to acture *maintainers* deciding what to ship.
-- **24 skills**: 19 `acture-*` (dev / foundation / consumer-surface — palette / hotkeys / MCP / AI / macros / e2e / **telemetry** / **undo** consumer skills + `acture-greenfield` and its two sub-skills) and 5 `migration-*`.
-- Five reproducibility / recipe docs: `hand-written-registry.md`, `hand-written-command-sequence.md`, **`hand-written-telemetry.md`**, **`hand-written-undo.md`**, and `ai-codemod-recipe.md`.
+- **25 skills**: 20 `acture-*` (dev / foundation / consumer-surface — palette / hotkeys / MCP / AI / macros / e2e / telemetry / undo / **test-property** consumer skills + `acture-greenfield` and its two sub-skills) and 5 `migration-*`.
+- Six reproducibility / recipe docs: `hand-written-registry.md`, `hand-written-command-sequence.md`, `hand-written-telemetry.md`, `hand-written-undo.md`, **`hand-written-test-property.md`**, and `ai-codemod-recipe.md`.
 
 ---
 
@@ -93,11 +93,20 @@ Two new packages pulled forward from Post-v1 by explicit user direction. Full wr
 - **Composition:** both packages wrap `registry.dispatch` via the same monkey-patch pattern as `acture-devtools`'s `instrumentRegistry` and `enableTierWarnings`. Install order = install order; dispose in reverse install order. No core change was needed.
 - **Consistency updates:** `acture-architecture-primer`'s consumer-surface list (#5 telemetry, #6 undo/redo) now references the shipped artifacts; `acture-consumer-integration`'s per-tool table gained telemetry and undo rows and its "See also" enumerates the new skills; `acture-state-adapter` no longer marks undo as "post-v1".
 
+### v1.12 — `acture-test-property` pull-forward — complete (this increment)
+New package pulled forward from Post-v1 as part of the autonomous v1.12 + v1.13 chain. Full write-up: `docs/v1_12-reflection.md`.
+
+- **`acture-test-property`** (new package, `1.0.0`) — fast-check arbitraries over the command registry; random `CommandSequence`s replayed via `acture-e2e-playwright`'s `replaySequence`; invariants asserted end-of-sequence. On a counter-example, the thrown `PropertyTestFailure` carries the shrunk failing sequence (replayable verbatim through `replaySequence`) and the invariant name. +29 tests. `minor` changeset. Reference: `docs/hand-written-test-property.md`. Consumer skill: `acture-test-property`.
+- **Shape decisions (settled autonomously per next_session.md):** tool-library = **fast-check** (the dominant JS property-testing library; jsverify unmaintained; hand-roll loses shrinking). Zod-to-arbitrary mapping = **in-package mapper** (the spec-listed `@fast-check/zod` package does not exist on npm; verified with `npm view @fast-check/zod`). Mapper subset = the JSON-Schema-representable subset acture's `toJsonSchema` already serializes: `string / number / boolean / literal / enum / array / object / union / optional / nullable`. Unsupported types throw `UnsupportedZodTypeError` loudly — silent skipping would mean a "valid" failing sequence the user couldn't reproduce. Invariants run **end-of-sequence**, matching `replayTest`'s shape.
+- **Builds on**, doesn't re-derive, the v1.7 sequence engine: imports `replaySequence`, `CommandSequence`, `SequenceStep` from `acture-e2e-playwright` (the package depends on the pure sequence module, not on Playwright runtime). Tested against both `acture-state-zustand` and `acture-state-redux` adapters in the same suite.
+- **No god-package.** One fast-check binding only. No Vitest/Jest matchers, no HTML report, no CI integration, no per-step invariants, no `fc.commands` stateful-model surface — each is its own future package if real demand surfaces (hard-don't #2).
+- **Consistency updates:** roadmap status snapshot updated; this section added; `acture-test-property` skill registered as the eighth-and-a-half consumer surface variant (it does not add a 9th surface — it is the e2e surface's property-test variant).
+
 ---
 
 ## Next
 
-**Pick the next increment from Deferred / backlog or the remaining Post-v1 list.** No item is pre-selected. With telemetry and undo shipped, the remaining Post-v1 items are: the **Python companion** (research-6 spec'd, unblocked), **`acture-sandbox`** (membrane-pattern third-party extension sandboxing), **`acture-test-property`** (fast-check arbitraries over command sequences), and additional state adapters (`acture-state-jotai`, `acture-state-valtio`). The deferred-but-not-rejected backlog has only the `.d.ts` tier mirror and the per-surface skills for extensions (no package yet). Pull-forward decisions are the user's; surface options when this increment is scheduled.
+**Pick the next increment from Deferred / backlog or the remaining Post-v1 list.** No item is pre-selected. With test-property shipped, the remaining Post-v1 items are: the **Python companion** (research-6 spec'd, unblocked — scheduled as v1.13), **`acture-sandbox`** (membrane-pattern third-party extension sandboxing), and additional state adapters (`acture-state-jotai`, `acture-state-valtio`). The deferred-but-not-rejected backlog has only the `.d.ts` tier mirror and the per-surface skills for extensions (no package yet). Pull-forward decisions are the user's; surface options when this increment is scheduled.
 
 ---
 
@@ -118,7 +127,7 @@ Per `docs/v1_plan.md` §"Post-v1" — none ship without explicit user direction.
 - ~~**`acture-undo`** — patch-based undo, transactions, effect queue.~~ ✅ Shipped v1.11.
 - ~~**`acture-telemetry`** — middleware logging every dispatch.~~ ✅ Shipped v1.11.
 - **`acture-sandbox`** — membrane-pattern third-party extension sandboxing.
-- **`acture-test-property`** — fast-check arbitraries derived from command param schemas; random command sequences asserting state invariants. (Now that v1.7 has landed: this would build *on* `acture-e2e-playwright`'s sequence engine — random `CommandSequence`s replayed via `replaySequence`, with invariant assertions — rather than re-deriving the sequence layer. Still deferred — pull forward on user direction.)
+- ~~**`acture-test-property`** — fast-check arbitraries derived from command param schemas; random command sequences asserting state invariants.~~ ✅ Shipped v1.12.
 - **`acture-state-jotai`, `acture-state-valtio`** — additional reference `StateAdapter<S>` implementations.
 - **Python companion** — **research-6 is done** (`docs/research/acture_research_6 …`) and gives this a tight, ready shape: a *thin MCP-client facade* package (`acture` on PyPI if available, else `acture-client`), ~300 LoC, dict-like in the `dol`/`py2mcp` idiom, zero hard Pydantic dependency. **The server side already ships** as `acture-mcp-server` — only the thin Python *client* remains. Explicitly **not** a Pydantic-codegen SDK or OpenAPI emitter in v1 (those are post-companion, for human — not agent — consumers). No longer blocked on research — pull forward whenever wanted. Note: research-6 was written against an assumed `StableCommand` name; map it to the real `CommandRecord` / `defineCommand`.
 
@@ -160,7 +169,8 @@ Explicit done/not-done for everything raised in conversation, so nothing is lost
 | Greenfield agent-track skills | ✅ Done (v1.9) — `acture-greenfield-state-model` + `acture-greenfield-bootstrap` below the foundation; see `docs/v1_9-reflection.md` |
 | `.describe()` schema-lint rule | ✅ Done (v1.10) — `acture/require-param-describe` in `eslint-plugin-acture-migration`; `minor` changeset; see `docs/v1_10-reflection.md` |
 | Pin MCP spec version | ✅ Done (v1.10) — `packages/mcp/src/spec-version.test.ts` pins `2025-11-25`; `patch` changeset on `acture-mcp-server`; see `docs/v1_10-reflection.md` |
-| `acture-test-property`, `state-jotai`, `state-valtio` | 🔒 Post-v1 |
+| `acture-test-property` | ✅ Shipped v1.12 — see `docs/v1_12-reflection.md` |
+| `state-jotai`, `state-valtio` | 🔒 Post-v1 |
 | `acture-undo`, `acture-telemetry` | ✅ Shipped v1.11 — see `docs/v1_11-reflection.md` |
 | `acture-sandbox` | 🔒 Post-v1 |
 | Research-6 (cross-language story) | ✅ Done — filed at `docs/research/acture_research_6 …` |
