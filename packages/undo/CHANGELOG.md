@@ -1,0 +1,7 @@
+# acture-undo
+
+## 1.1.0
+
+### Minor Changes
+
+- a7b00bd: Initial release. Patch-based undo/redo over a `PatchCapableAdapter` (zustand-with-immer, RTK, MST). `createUndoHistory(adapter, registry, options?)` returns `{ undo, redo, canUndo, canRedo, clear, transaction, entries, dispose }`. Observes the adapter's `setStateWithPatches` calls and groups them by dispatch boundary — multiple patches per dispatch become ONE undo entry; multiple dispatches inside a `transaction(fn)` also become ONE entry. Partial-failure semantics: a throwing dispatch inside a transaction leaves prior mutations applied; the entry is still pushed; the caller can `undo()` to rewind (settled with the user). Effects flow through an optional `onEffect(effect, { isUndo, isRedo })` host callback at apply, undo, and redo lifecycle points — acture-undo never enacts effects itself. Inverse patches are pre-reversed at push time so `applyPatches(state, inversePatches)` is one call per undo. `limit` default 100; oldest dropped when exceeded. Hand-written equivalent: `docs/hand-written-undo.md`.

@@ -1,6 +1,6 @@
 {
   "name": "acture-telemetry",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "acture telemetry adapter — observe every dispatch via a configurable sink. Optional pass-through redact and sampler callbacks. Errors-as-data preserved end-to-end.",
   "license": "Apache-2.0",
   "author": "Thor Whalen",
