@@ -4,14 +4,14 @@ The live forward-planning surface. `docs/v1_plan.md` and `docs/implementation_pl
 
 **How work proceeds:** phases are over. Work is small, tracked increments. Each picks one or two items from "Next" or "Deferred", ships them, updates this file, and replaces `docs/next_session.md` with the following handoff.
 
-Last updated: **2026-05-14** (v1.9 — codemods polish + greenfield agent-track skills).
+Last updated: **2026-05-15** (v1.10 — `.describe()` schema-quality lint rule + MCP spec-version pin).
 
 ---
 
 ## Status snapshot
 
-- **16 packages** in the workspace. 15 published on npm; **`acture-e2e-playwright`** ships with the next release. **`acture-codemods`** has a pending `minor` changeset (v1.9 CLI polish). Note: the MCP adapter ships as **`acture-mcp-server`** — the unscoped name `acture-mcp` was already taken by an unrelated project, so the package was renamed.
-- **422 package tests + 41 example tests** green; all packages and examples build + typecheck. (+3 from the v1.9 `acture-codemods` CLI disambiguation tests.)
+- **16 packages** in the workspace. `acture-codemods@1.2.0` published (v1.9 CLI polish, 2026-05-15); `acture-e2e-playwright` still ships with the next release. Two pending changesets this increment: `eslint-plugin-acture-migration` `minor` and `acture-mcp-server` `patch`. Note: the MCP adapter ships as **`acture-mcp-server`** — the unscoped name `acture-mcp` was already taken by an unrelated project, so the package was renamed.
+- **441 package tests + 41 example tests** green; all packages and examples build + typecheck. (+19 from the new `acture/require-param-describe` rule's tests, +2 from the MCP spec-version pin tests.)
 - Canonical positioning is now written down (`docs/positioning.md`) and wired into the skills.
 - **22 skills**: 17 `acture-*` (dev / foundation / consumer-surface — including `acture-greenfield` + its two new agent-track sub-skills `acture-greenfield-state-model` and `acture-greenfield-bootstrap`, the `acture-macros` + `acture-e2e` consumer skills, and the `acture-hotkeys` + `acture-mcp` + `acture-ai` consumer skills) and 5 `migration-*`.
 - Three reproducibility / recipe docs: `docs/hand-written-registry.md` (the core primitive), `docs/hand-written-command-sequence.md` (the record / compose / replay consumer layer), and `docs/ai-codemod-recipe.md` (authoring a one-off codemod).
@@ -78,11 +78,17 @@ Two backlog increments shipped in one session (the user delegated the scope call
 - **`acture-greenfield-bootstrap`** — the concrete file-by-file walk-through of the foundation's four-step sequence, grounded in the `examples/greenfield/graph-editor` worked app: the three core files (`state.ts` → `registry.ts` → `commands/index.ts`), the "every mutation through dispatch" acceptance criterion + its `rg` audit, the ordering discipline, the recurring hand-write-vs-install decision points.
 - **Consistency update:** `acture-greenfield` now points at both sub-skills (intro + Step 1 + See also).
 
+### v1.10 — `.describe()` schema-quality lint rule + MCP spec-version pin — complete (this increment)
+Two small, autonomous backlog items surfaced by research-6 (the user picked "smaller backlog items" over pulling a post-v1 item forward). Full write-up: `docs/v1_10-reflection.md`.
+
+- **`acture/require-param-describe`** (new ESLint rule in `eslint-plugin-acture-migration`) — flags top-level fields in a `defineCommand({ params: z.object({...}) })` schema whose value expression has no `.describe(...)` in its method chain. Zod → JSON Schema is lossy; without `.describe()` every downstream consumer (MCP tool inputs, AI function-calling tool args, autoform / rjsf form adapters) is left with a parameter that has no semantic hint. Conservative detection (tracks the `defineCommand` and `z` bindings, only fires when both are recognised and `params` is structurally `z.object({...})`). +19 tests. `minor` changeset. The plugin now hosts both migration-specific and schema-quality rules; the historical `-migration` package suffix was kept to avoid a breaking rename (a god-package-of-one new plugin would have failed the rule of three).
+- **MCP spec-version pin** (`packages/mcp/src/spec-version.test.ts`) — pins `EXPECTED_PROTOCOL_VERSION = '2025-11-25'` and asserts the SDK's `LATEST_PROTOCOL_VERSION` matches and `SUPPORTED_PROTOCOL_VERSIONS` still contains the older dates we interoperate with. When the SDK ships a new spec date the test fails, surfacing the upgrade as the deliberate, semver-major decision the roadmap calls for rather than an accidental transitive-dep pickup. README documents the policy + the test's upgrade checklist. +2 tests. `patch` changeset on `acture-mcp-server`.
+
 ---
 
 ## Next
 
-**Pick the next increment from Deferred / backlog.** No item is pre-selected. The codemods backlog file is now fully closed; the consumer-skill family covers every surface that has a shipping package; the greenfield agent-track now has its foundation + two sub-skills. The remaining backlog is thinner — the strongest candidates are the **telemetry / undo / extensions consumer skills** (still gated on those packages existing — agent-written-path-only until then) and **deeper greenfield agent-track skills** if a gap shows up in practice. It may be a good moment to consider whether a **post-v1 item** (the Python companion is unblocked and specified; `acture-undo` / `acture-telemetry` are spec'd) should be pulled forward — but only with explicit user direction and the rule of three. Surface the options when this increment is scheduled.
+**Pick the next increment from Deferred / backlog.** No item is pre-selected. The named backlog is now genuinely small — every concrete autonomous item from research-6 has been picked up. What remains: the **telemetry / undo / extensions consumer skills** (still gated on those packages existing — agent-written-path-only until then) and **deeper greenfield or migration skills** if practice surfaces a gap. The substantive fork is whether to **pull a post-v1 item forward** — the Python companion is unblocked and specified, `acture-undo` and `acture-telemetry` are spec'd. Each needs explicit user direction *and* the rule-of-three callers gate. Surface the options when this increment is scheduled; do not pull a post-v1 item forward unilaterally.
 
 ---
 
@@ -107,10 +113,12 @@ Per `docs/v1_plan.md` §"Post-v1" — none ship without explicit user direction 
 - **`acture-state-jotai`, `acture-state-valtio`** — additional reference `StateAdapter<S>` implementations.
 - **Python companion** — **research-6 is done** (`docs/research/acture_research_6 …`) and gives this a tight, ready shape: a *thin MCP-client facade* package (`acture` on PyPI if available, else `acture-client`), ~300 LoC, dict-like in the `dol`/`py2mcp` idiom, zero hard Pydantic dependency. **The server side already ships** as `acture-mcp-server` — only the thin Python *client* remains. Explicitly **not** a Pydantic-codegen SDK or OpenAPI emitter in v1 (those are post-companion, for human — not agent — consumers). Still gated on the rule of three, but no longer blocked on research — pull forward whenever wanted. Note: research-6 was written against an assumed `StableCommand` name; map it to the real `CommandRecord` / `defineCommand`.
 
-### Smaller items surfaced by research-6 (backlog)
+### Smaller items surfaced by research-6 — both now shipped
 
-- **`.describe()` discipline as a lint rule** — Zod→JSON-Schema is lossy (refinements, transforms, branded types are dropped), so a missing `.describe()` on a command param should be a lint error. Natural fit for a future `eslint-plugin-acture` schema-quality rule. Affects `acture-schema-bridge` quality and `acture-mcp-server` tool descriptions.
-- **Pin the MCP spec version in CI** for `acture-mcp-server` — the spec is date-versioned and the transport story churns (SSE → streamable HTTP); treat protocol upgrades as semver-major.
+Both items below were picked up in v1.10:
+
+- **`.describe()` discipline as a lint rule** — ✅ Shipped as `acture/require-param-describe` in `eslint-plugin-acture-migration`. The plugin's name kept its historical `-migration` suffix (renaming an already-published package is breaking; creating a new one-rule plugin would have been a god-package-of-one against the rule of three).
+- **Pin the MCP spec version in CI** — ✅ Shipped as a `vitest` test in `packages/mcp/src/spec-version.test.ts` that asserts the SDK's `LATEST_PROTOCOL_VERSION` matches `EXPECTED_PROTOCOL_VERSION = '2025-11-25'`. An SDK upgrade that bumps the spec date now surfaces as a deliberate, semver-major decision.
 
 ---
 
@@ -140,8 +148,9 @@ Explicit done/not-done for everything raised in conversation, so nothing is lost
 | Per-surface consumer skills — hotkeys / MCP / AI | ✅ Done (v1.8) — `acture-hotkeys`, `acture-mcp`, `acture-ai`; see `docs/v1_8-reflection.md` |
 | Per-surface consumer skills — telemetry / undo / extensions | ⏸️ Deferred — no shipping packages yet (post-v1); skills would be agent-written-path-only |
 | Greenfield agent-track skills | ✅ Done (v1.9) — `acture-greenfield-state-model` + `acture-greenfield-bootstrap` below the foundation; see `docs/v1_9-reflection.md` |
+| `.describe()` schema-lint rule | ✅ Done (v1.10) — `acture/require-param-describe` in `eslint-plugin-acture-migration`; `minor` changeset; see `docs/v1_10-reflection.md` |
+| Pin MCP spec version | ✅ Done (v1.10) — `packages/mcp/src/spec-version.test.ts` pins `2025-11-25`; `patch` changeset on `acture-mcp-server`; see `docs/v1_10-reflection.md` |
 | `acture-test-property`, `state-jotai`, `state-valtio` | 🔒 Post-v1 |
 | `acture-undo`, `acture-telemetry`, `acture-sandbox` | 🔒 Post-v1 |
 | Research-6 (cross-language story) | ✅ Done — filed at `docs/research/acture_research_6 …` |
 | Python companion | 🔓 Post-v1 but **unblocked & specified** — thin MCP-client facade; server side (`acture-mcp-server`) already ships |
-| `.describe()` schema-lint rule, pin MCP spec version | ⏸️ Deferred — backlog (surfaced by research-6) |
